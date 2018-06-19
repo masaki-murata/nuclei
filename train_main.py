@@ -15,6 +15,7 @@ from keras.callbacks import CSVLogger, EarlyStopping, ModelCheckpoint
 from keras.utils.training_utils import multi_gpu_model
 import keras.backend as K
 import shutil
+import matplotlib.pyplot as plt
 
 
 import tensorflow as tf
@@ -30,12 +31,12 @@ if os.name=='posix':
     set_session(tf.Session(config=config))
 
     
-def load_image_manual(image_ids=np.arange(20,39),
-                      data_shape=(584,565),
+def load_image_manual(image_ids=np.arange(1,16),
+#                      data_shape=(584,565),
 #                      crop_shape=(64,64),
                       ):
-    path_to_train_image = "../training/images/%d_training.tif" # % image_id
-    path_to_train_manual = "../training/1st_manual/%d_manual1.gif" # % image_id
+    path_to_train_image = "../segmentation_training_set/image%02d.png" # % image_id
+    path_to_train_mask = "../segmentation_training_set/image%02d_mask.txt" # % image_id
 
     # load data
     images = np.zeros( (image_ids.shape+data_shape+(3,)), dtype=np.uint8 )
@@ -498,20 +499,41 @@ def main():
 #          if_save_img=True,
 #          nb_gpus=1
 #          )   
-
-    random_search(iteration_num=100,
-                  path_to_cnn_format = "./cnn/mm%02ddd%02d_%02d/", # % (now.month, now.day, count)
-                  train_ids=np.arange(21,39),
-                  data_size_per_epoch=2**14,
-                  validation_ids=np.array([39,40]),
-                  val_data_size = 2048,
-                  epochs=256,
-                  data_shape=(584,565),
-#                  if_save_img=True,
-                  nb_gpus=2,
-                  patience = 8,
-#                  epoch_num_fix = 0,
-                  )    
+    image_id=1
+    f = open("../segmentation_training_set/image%02d_mask.txt" % image_id)
+    line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+    shape = list(map(int, line.split()))
+    print(shape)
+    
+    mask = np.zeros(shape[0]*shape[1])
+    count = 0
+    line = f.readline()
+    while line:
+#        if count==0:
+#            print(line.split())
+        count += 1
+#        print(int(line))
+        mask[count-1] = line
+        line = f.readline()
+    f.close
+    mask = mask.reshape((shape[1],shape[0]))
+    print(mask[0,0], np.amax(mask))
+    mask[mask>0] = 255
+    Image.fromarray(mask).show()
+#    plt.imshow(mask)
+#    random_search(iteration_num=100,
+#                  path_to_cnn_format = "./cnn/mm%02ddd%02d_%02d/", # % (now.month, now.day, count)
+#                  train_ids=np.arange(21,39),
+#                  data_size_per_epoch=2**14,
+#                  validation_ids=np.array([39,40]),
+#                  val_data_size = 2048,
+#                  epochs=256,
+#                  data_shape=(584,565),
+##                  if_save_img=True,
+#                  nb_gpus=2,
+#                  patience = 8,
+##                  epoch_num_fix = 0,
+#                  )    
     
 if __name__ == '__main__':
     main()
