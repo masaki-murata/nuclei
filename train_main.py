@@ -80,9 +80,9 @@ def make_validation_dataset(validation_ids=np.arange(39,41),
     return data, labels        
 
 
-def batch_iter(images=np.array([]), # (画像数、584, 565, 3)
+def batch_iter(images={}, # (画像数id、W, H, 3)
                manuals=np.array([]), # (画像数、584, 565, 1)
-               crop_shape=(64,64),
+               crop_shape=(256,256),
                steps_per_epoch=2**14,
 #               image_ids=np.arange(20),
                batch_size=32,
