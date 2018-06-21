@@ -70,11 +70,11 @@ def load_image_groundtruths(image_ids=np.arange(1,15),
     return images, groundtruths
 
     
-def make_validation_dataset(validation_ids=np.arange(39,41),
+def make_validation_dataset(validation_ids=np.arange(14,15),
                             load = True,
                             val_data_size = 2048,
-                            data_shape=(584,565),
-                            crop_shape=(64,64),
+#                            data_shape=(584,565),
+                            crop_shape=(256,256),
                             ):
     path_to_validation_data = "../IntermediateData/validation_data_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
     path_to_validation_label = "../IntermediateData/validation_label_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
