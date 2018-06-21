@@ -30,26 +30,46 @@ if os.name=='posix':
     
     set_session(tf.Session(config=config))
 
-    
-def load_image_manual(image_ids=np.arange(1,16),
+
+# 画像と正解ラベルを読み込む関数
+def load_image_groundtruths(image_ids=np.arange(1,15),
 #                      data_shape=(584,565),
 #                      crop_shape=(64,64),
                       ):
     path_to_train_image = "../segmentation_training_set/image%02d.png" # % image_id
     path_to_train_mask = "../segmentation_training_set/image%02d_mask.txt" # % image_id
 
+    def load_grountruth(image_id):
+        f = open(path_to_train_mask % image_id)
+        line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+        shape = list(map(int, line.split())) # 第一行は shape
+        
+        grountruth = np.zeros(shape[0]*shape[1])
+        count = 0
+        line = f.readline()
+        while line:
+            grountruth[count] = line
+            count += 1
+            line = f.readline()
+        f.close
+        grountruth = grountruth.reshape((shape[1],shape[0]))
+#        print(grountruth[0,0], np.amax(grountruth))
+        grountruth[grountruth>0] = 255
+#        Image.fromarray(grountruth).show()
+        return grountruth
+        
     # load data
-    images = np.zeros( (image_ids.shape+data_shape+(3,)), dtype=np.uint8 )
-    manuals = np.zeros( (image_ids.shape+data_shape+(1,)), dtype=np.uint8 )
+    images, groundtruths = {}, {}
     for x in range(image_ids.size):
         image_id = image_ids[x]
-        images[x] = np.array( Image.open(path_to_train_image % (image_id)) )
-        manual = np.array( Image.open(path_to_train_manual % (image_id)) )
-        manual[manual>0] = 1
-        manuals[x] = manual.reshape(manual.shape+(1,))
+        images[str(image_id)] = np.array( Image.open(path_to_train_image % (image_id)) )
+        groundtruth = np.array( Image.open(path_to_train_mask % (image_id)) )
+        groundtruth[groundtruth>0] = 1
+        groundtruths[str(image_id)] = groundtruth.reshape(groundtruth.shape+(1,))
         
-    return images, manuals
+    return images, groundtruths
 
+    
 def make_validation_dataset(validation_ids=np.arange(39,41),
                             load = True,
                             val_data_size = 2048,
@@ -80,15 +100,15 @@ def make_validation_dataset(validation_ids=np.arange(39,41),
     return data, labels        
 
 
-def batch_iter(images={}, # (画像数id、W, H, 3)
-               manuals=np.array([]), # (画像数、584, 565, 1)
+def batch_iter(images={}, # {画像数id、W, H, 3)}
+               groundtruth={}, # {画像数id、W, H, 3)}
                crop_shape=(256,256),
                steps_per_epoch=2**14,
 #               image_ids=np.arange(20),
                batch_size=32,
                ):
         
-    manuals = manuals.reshape(manuals.shape[:-1])
+    groundtruth = groundtruth.reshape(groundtruth.shape[:-1])
     while True:
         for step in range(steps_per_epoch):
             data = np.zeros( (batch_size,)+crop_shape+(3,), dtype=np.uint8 )
@@ -99,14 +119,14 @@ def batch_iter(images={}, # (画像数id、W, H, 3)
                 (h, w) = crop_shape # w は横、h は縦
                 c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
                 (H, W) = (int(s*w + c*h), int(c*w + s*h)) #最終的に切り出したい画像に内接する四角形の辺の長さ
-                y, x = np.random.randint(images.shape[1] - H + 1), np.random.randint(images.shape[2] - W + 1)
+                y, x = np.random.randint(images.shape[1] - H + 1), np.random.randint(images.shape[2] - W + 1) # 第一段階での左上の座標
 #                y = np.random.randint(images.shape[1]-crop_shape[0])
 #                x = np.random.randint(images.shape[2]-crop_shape[1])
 #                data[count] = images[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
 #                label[count] = manuals[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
 #                data_crop = images[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]       
 #                label_crop = manuals[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
-                data_crop, label_crop = Image.fromarray(images[image_num, y:y+H, x:x+W,:]), Image.fromarray(manuals[image_num, y:y+H, x:x+W])
+                data_crop, label_crop = Image.fromarray(images[image_num, y:y+H, x:x+W,:]), Image.fromarray(groundtruth[image_num, y:y+H, x:x+W])
                 data_crop, label_crop = np.array(data_crop.rotate(-theta, expand=True)), np.array(label_crop.rotate(-theta, expand=True))
                 y_min, x_min = data_crop.shape[0]//2-h//2, data_crop.shape[1]//2-w//2
                 data_crop, label_crop = data_crop[y_min:y_min+h, x_min:x_min+w,:], label_crop[y_min:y_min+h, x_min:x_min+w]
