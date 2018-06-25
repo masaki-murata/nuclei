@@ -117,20 +117,21 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
 
 
 def batch_iter(images={}, # {画像数id、W, H, 3)}
-               groundtruth={}, # {画像数id、W, H, 3)}
+               groundtruths={}, # {画像数id、W, H, 3)}
                crop_shape=(128,128),
                steps_per_epoch=2**14,
 #               image_ids=np.arange(20),
                batch_size=32,
                ):
         
-    groundtruth = groundtruth.reshape(groundtruth.shape[:-1])
+#    groundtruth = groundtruth.reshape(groundtruth.shape[:-1])
     while True:
         for step in range(steps_per_epoch):
             data = np.zeros( (batch_size,)+crop_shape+(3,), dtype=np.uint8 )
             labels = np.zeros( (batch_size,)+crop_shape+(1,), dtype=np.uint8 )
             for count in range(batch_size):
                 image_num = np.random.randint(images.shape[0])
+                image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
                 theta = np.random.randint(360)
                 (h, w) = crop_shape # w は横、h は縦
                 c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
@@ -142,7 +143,7 @@ def batch_iter(images={}, # {画像数id、W, H, 3)}
 #                label[count] = manuals[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
 #                data_crop = images[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]       
 #                label_crop = manuals[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
-                data_crop, label_crop = Image.fromarray(images[image_num, y:y+H, x:x+W,:]), Image.fromarray(groundtruth[image_num, y:y+H, x:x+W])
+                data_crop, label_crop = Image.fromarray(image[y:y+H, x:x+W,:]), Image.fromarray(groundtruth[y:y+H, x:x+W])
                 data_crop, label_crop = np.array(data_crop.rotate(-theta, expand=True)), np.array(label_crop.rotate(-theta, expand=True))
                 y_min, x_min = data_crop.shape[0]//2-h//2, data_crop.shape[1]//2-w//2
                 data_crop, label_crop = data_crop[y_min:y_min+h, x_min:x_min+w,:], label_crop[y_min:y_min+h, x_min:x_min+w]
