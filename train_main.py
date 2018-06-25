@@ -72,9 +72,9 @@ def load_image_groundtruths(image_ids=np.arange(1,15),
     
 def make_validation_dataset(validation_ids=np.arange(14,15),
                             load = True,
-                            val_data_size = 2048,
+                            val_data_size = 1024,
 #                            data_shape=(584,565),
-                            crop_shape=(256,256),
+                            crop_shape=(128,128),
                             ):
     path_to_validation_data = "../IntermediateData/validation_data_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
     path_to_validation_label = "../IntermediateData/validation_label_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
@@ -82,8 +82,8 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
         data = np.load(path_to_validation_data)
         labels = np.load(path_to_validation_label)
     else:
-        images, manuals = load_image_manual(image_ids=validation_ids,
-                                            data_shape=data_shape,
+        images, manuals = load_image_groundtruths(image_ids=validation_ids,
+#                                            data_shape=data_shape,
 #                                            crop_shape=crop_shape,
                                             )
         data = np.zeros( (val_data_size,)+crop_shape+(3,), dtype=np.uint8 )
