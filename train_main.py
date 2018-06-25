@@ -82,7 +82,7 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
         data = np.load(path_to_validation_data)
         labels = np.load(path_to_validation_label)
     else:
-        images, manuals = load_image_groundtruths(image_ids=validation_ids,
+        images, groundtruths = load_image_groundtruths(image_ids=validation_ids,
 #                                            data_shape=data_shape,
 #                                            crop_shape=crop_shape,
                                             )
@@ -90,10 +90,26 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
         labels = np.zeros( (val_data_size,)+crop_shape+(1,), dtype=np.uint8 )
         for count in range(val_data_size):
             image_num = np.random.randint(images.shape[0])
-            y = np.random.randint(images.shape[1]-crop_shape[0])
-            x = np.random.randint(images.shape[2]-crop_shape[1])
-            data[count] = images[image_num, y:y+crop_shape[0], x:x+crop_shape[1],:]
-            labels[count] = manuals[image_num, y:y+crop_shape[0], x:x+crop_shape[1],:]
+            image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
+            theta = np.random.randint(360)
+            (h, w) = crop_shape # w は横、h は縦
+            c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
+            (H, W) = (int(s*w + c*h), int(c*w + s*h)) #最終的に切り出したい画像に内接する四角形の辺の長さ
+            y, x = np.random.randint(images.shape[1] - H + 1), np.random.randint(images.shape[2] - W + 1) # 第一段階での左上の座標
+#            y = np.random.randint(images.shape[1]-crop_shape[0])
+#            x = np.random.randint(images.shape[2]-crop_shape[1])
+            data_crop, label_crop = Image.fromarray(image[y:y+H, x:x+W,:]), Image.fromarray(groundtruth[y:y+H, x:x+W])
+            data_crop, label_crop = np.array(data_crop.rotate(-theta, expand=True)), np.array(label_crop.rotate(-theta, expand=True))
+            y_min, x_min = data_crop.shape[0]//2-h//2, data_crop.shape[1]//2-w//2
+            data_crop, label_crop = data_crop[y_min:y_min+h, x_min:x_min+w,:], label_crop[y_min:y_min+h, x_min:x_min+w]
+            label_crop = label_crop.reshape(label_crop.shape+(1,))
+            if np.random.choice([True,False]):
+                data_crop, label_crop = np.flip(data_crop, axis=1), np.flip(label_crop, axis=1)
+#                if np.random.choice([True,False]):
+#                    data_crop, label_crop = np.flip(data_crop, axis=2), np.flip(label_crop, axis=2)
+            data[count], labels[count] = data_crop, label_crop
+#            data[count] = images[image_num, y:y+crop_shape[0], x:x+crop_shape[1],:]
+#            labels[count] = groundtruth[y:y+crop_shape[0], x:x+crop_shape[1],:]
         np.save(path_to_validation_data, data)
         np.save(path_to_validation_label, labels)
                 
@@ -102,7 +118,7 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
 
 def batch_iter(images={}, # {画像数id、W, H, 3)}
                groundtruth={}, # {画像数id、W, H, 3)}
-               crop_shape=(256,256),
+               crop_shape=(128,128),
                steps_per_epoch=2**14,
 #               image_ids=np.arange(20),
                batch_size=32,
