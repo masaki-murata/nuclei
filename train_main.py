@@ -156,14 +156,14 @@ def batch_iter(images={}, # {画像数id、W, H, 3)}
             yield data, labels
             
 
-def train(train_ids=np.arange(21,39),
-          validation_ids=np.arange(39,41),
-          val_data_size = 2048,
-          batch_size=32,
+def train(train_ids=np.arange(1,14),
+          validation_ids=np.arange(14),
+          val_data_size = 1024,
+          batch_size=64,
           data_size_per_epoch=2**14,
 #          steps_per_epoch=2**14,
           epochs=256,
-          data_shape=(584,565),
+#          data_shape=(584,565),
           crop_shape=(128,128),
           filter_list_encoding=np.array([]),
           filter_list_decoding=np.array([]),
@@ -183,13 +183,12 @@ def train(train_ids=np.arange(21,39),
 
     
     # load data
-    train_images, train_manuals = load_image_manual(image_ids=train_ids,data_shape=data_shape)
+    train_images, train_manuals = load_image_groundtruths(image_ids=train_ids)
 #    validation_images, validation_manuals = \
 #        load_image_manual(image_ids=validation_ids,data_shape=data_shape,crop_shape=crop_shape)
     val_data, val_label = make_validation_dataset(validation_ids=validation_ids,
                                                   load = True,
                                                   val_data_size = val_data_size,
-                                                  data_shape=data_shape,
                                                   crop_shape=crop_shape,
                                                   )
         
