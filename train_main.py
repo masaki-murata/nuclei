@@ -62,15 +62,15 @@ def load_image_groundtruths(image_ids=np.arange(1,15),
     images, groundtruths = {}, {}
     for x in range(image_ids.size):
         image_id = image_ids[x]
-        images[str(image_id)] = np.array( Image.open(path_to_train_image % (image_id)) )
+        images[str(image_id)] = np.array( Image.open(path_to_train_image % (image_id)) )[:,:,:3]
         groundtruth = load_grountruth(image_id)
         groundtruth[groundtruth>0] = 1
-        groundtruths[str(image_id)] = groundtruth.reshape(groundtruth.shape+(1,))
+        groundtruths[str(image_id)] = groundtruth#.reshape(groundtruth.shape)
         
     return images, groundtruths
 
     
-def make_validation_dataset(validation_ids=np.arange(14,15),
+def make_validation_dataset(validation_ids=np.arange(13,14),
                             load = True,
                             val_data_size = 1024,
 #                            data_shape=(584,565),
@@ -89,13 +89,14 @@ def make_validation_dataset(validation_ids=np.arange(14,15),
         data = np.zeros( (val_data_size,)+crop_shape+(3,), dtype=np.uint8 )
         labels = np.zeros( (val_data_size,)+crop_shape+(1,), dtype=np.uint8 )
         for count in range(val_data_size):
-            image_num = np.random.randint(images.shape[0])
+            image_num = np.random.choice(validation_ids)
             image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
+            print("image.shape, groundtruth.shape = ", image.shape, groundtruth.shape)
             theta = np.random.randint(360)
             (h, w) = crop_shape # w は横、h は縦
             c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
             (H, W) = (int(s*w + c*h), int(c*w + s*h)) #最終的に切り出したい画像に内接する四角形の辺の長さ
-            y, x = np.random.randint(images.shape[1] - H + 1), np.random.randint(images.shape[2] - W + 1) # 第一段階での左上の座標
+            y, x = np.random.randint(image.shape[0] - H + 1), np.random.randint(image.shape[1] - W + 1) # 第一段階での左上の座標
 #            y = np.random.randint(images.shape[1]-crop_shape[0])
 #            x = np.random.randint(images.shape[2]-crop_shape[1])
             data_crop, label_crop = Image.fromarray(image[y:y+H, x:x+W,:]), Image.fromarray(groundtruth[y:y+H, x:x+W])
@@ -130,13 +131,13 @@ def batch_iter(images={}, # {画像数id、W, H, 3)}
             data = np.zeros( (batch_size,)+crop_shape+(3,), dtype=np.uint8 )
             labels = np.zeros( (batch_size,)+crop_shape+(1,), dtype=np.uint8 )
             for count in range(batch_size):
-                image_num = np.random.randint(images.shape[0])
+                image_num = np.random.choice(images.keys())
                 image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
                 theta = np.random.randint(360)
                 (h, w) = crop_shape # w は横、h は縦
                 c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
                 (H, W) = (int(s*w + c*h), int(c*w + s*h)) #最終的に切り出したい画像に内接する四角形の辺の長さ
-                y, x = np.random.randint(images.shape[1] - H + 1), np.random.randint(images.shape[2] - W + 1) # 第一段階での左上の座標
+                y, x = np.random.randint(image.shape[0] - H + 1), np.random.randint(image.shape[1] - W + 1) # 第一段階での左上の座標
 #                y = np.random.randint(images.shape[1]-crop_shape[0])
 #                x = np.random.randint(images.shape[2]-crop_shape[1])
 #                data[count] = images[image_id, y:y+crop_shape[0], x:x+crop_shape[1],:]
