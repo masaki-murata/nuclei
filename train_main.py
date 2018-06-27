@@ -63,7 +63,7 @@ def load_image_groundtruths(image_ids=np.arange(1,15),
     for x in range(image_ids.size):
         image_id = image_ids[x]
         images[str(image_id)] = np.array( Image.open(path_to_train_image % (image_id)) )
-        groundtruth = np.array( Image.open(path_to_train_mask % (image_id)) )
+        groundtruth = load_grountruth(image_id)
         groundtruth[groundtruth>0] = 1
         groundtruths[str(image_id)] = groundtruth.reshape(groundtruth.shape+(1,))
         
@@ -242,17 +242,17 @@ def train(train_ids=np.arange(1,14),
             print(epoch)
             model_single_gpu.save(path_to_save_model % (epoch))
             model_single_gpu.save_weights(path_to_save_weights % (epoch))
-            validation_accuracy = evaluation.whole_slide_accuracy(path_to_cnn=path_to_cnn,
-                                                                  epoch=epoch,
-                                                                  model=model_multi_gpu,
-                                                                  image_ids=validation_ids,
-                                                                  data_shape=data_shape,
-                                                                  crop_shape=crop_shape,
-                                                                  if_save_img=if_save_img,
-                                                                  nb_gpus=nb_gpus,
-                                                                  batch_size=batch_size,
-                                                                  )
-            print("validation_accuracy = ", validation_accuracy)
+#            validation_accuracy = evaluation.whole_slide_accuracy(path_to_cnn=path_to_cnn,
+#                                                                  epoch=epoch,
+#                                                                  model=model_multi_gpu,
+#                                                                  image_ids=validation_ids,
+##                                                                  data_shape=data_shape,
+#                                                                  crop_shape=crop_shape,
+#                                                                  if_save_img=if_save_img,
+#                                                                  nb_gpus=nb_gpus,
+#                                                                  batch_size=batch_size,
+#                                                                  )
+#            print("validation_accuracy = ", validation_accuracy)
 
 def dict_hyperparam():
     hp = {}
@@ -520,42 +520,42 @@ def random_search(iteration_num=1,
 #            os.mkdir(path_to_cnn + "testacc=%f/" % testacc)
 
 def main():
-#    filter_list_encoding = [64, 64, 128, 128, 256, 256, 512]
-#    filter_list_decoding = [256, 128, 128, 64, 64, 64]
-#    train(train_ids=np.arange(21,39),
-#          validation_ids=np.arange(39,41),
-#          val_data_size=2048,
-#          batch_size=32,
-#          data_size_per_epoch=2**14,
-#          epochs=128, #256,
+    filter_list_encoding = [64, 64, 128, 128]
+    filter_list_decoding = [256, 128, 128]
+    train(train_ids=np.arange(1,13),
+          validation_ids=np.arange(13,14),
+          val_data_size=2048,
+          batch_size=32,
+          data_size_per_epoch=2**14,
+          epochs=128, #256,
 #          data_shape=(584,565),
-#          crop_shape=(128,128),
-#          filter_list_encoding=filter_list_encoding,
-#          filter_list_decoding=filter_list_decoding,
-#          if_save_img=True,
-#          nb_gpus=1
-#          )   
-    image_id=1
-    f = open("../segmentation_training_set/image%02d_mask.txt" % image_id)
-    line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
-    shape = list(map(int, line.split()))
-    print(shape)
-    
-    mask = np.zeros(shape[0]*shape[1])
-    count = 0
-    line = f.readline()
-    while line:
-#        if count==0:
-#            print(line.split())
-        count += 1
-#        print(int(line))
-        mask[count-1] = line
-        line = f.readline()
-    f.close
-    mask = mask.reshape((shape[1],shape[0]))
-    print(mask[0,0], np.amax(mask))
-    mask[mask>0] = 255
-    Image.fromarray(mask).show()
+          crop_shape=(128,128),
+          filter_list_encoding=filter_list_encoding,
+          filter_list_decoding=filter_list_decoding,
+          if_save_img=True,
+          nb_gpus=1
+          )   
+#    image_id=1
+#    f = open("../segmentation_training_set/image%02d_mask.txt" % image_id)
+#    line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+#    shape = list(map(int, line.split()))
+#    print(shape)
+#    
+#    mask = np.zeros(shape[0]*shape[1])
+#    count = 0
+#    line = f.readline()
+#    while line:
+##        if count==0:
+##            print(line.split())
+#        count += 1
+##        print(int(line))
+#        mask[count-1] = line
+#        line = f.readline()
+#    f.close
+#    mask = mask.reshape((shape[1],shape[0]))
+#    print(mask[0,0], np.amax(mask))
+#    mask[mask>0] = 255
+#    Image.fromarray(mask).show()
 #    plt.imshow(mask)
 #    random_search(iteration_num=100,
 #                  path_to_cnn_format = "./cnn/mm%02ddd%02d_%02d/", # % (now.month, now.day, count)
