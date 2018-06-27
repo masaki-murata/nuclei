@@ -126,14 +126,15 @@ def batch_iter(images={}, # {画像数id、W, H, 3)}
 #               image_ids=np.arange(20),
                batch_size=32,
                ):
-        
+    
+    image_ids = list(map(int, list(images.keys())))
 #    groundtruth = groundtruth.reshape(groundtruth.shape[:-1])
     while True:
         for step in range(steps_per_epoch):
             data = np.zeros( (batch_size,)+crop_shape+(3,), dtype=np.uint8 )
             labels = np.zeros( (batch_size,)+crop_shape+(1,), dtype=np.uint8 )
             for count in range(batch_size):
-                image_num = np.random.choice(images.keys())
+                image_num = np.random.choice(image_ids)
                 image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
                 theta = np.random.randint(360)
                 (h, w) = crop_shape # w は横、h は縦
@@ -159,7 +160,7 @@ def batch_iter(images={}, # {画像数id、W, H, 3)}
             yield data, labels
             
 
-def train(train_ids=np.arange(1,14),
+def train(train_ids=np.arange(1,13),
           validation_ids=np.arange(14),
           val_data_size = 1024,
           batch_size=64,
