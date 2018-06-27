@@ -186,7 +186,7 @@ def train(train_ids=np.arange(1,14),
 
     
     # load data
-    train_images, train_manuals = load_image_groundtruths(image_ids=train_ids)
+    train_images, train_groundtruths = load_image_groundtruths(image_ids=train_ids)
 #    validation_images, validation_manuals = \
 #        load_image_manual(image_ids=validation_ids,data_shape=data_shape,crop_shape=crop_shape)
     val_data, val_label = make_validation_dataset(validation_ids=validation_ids,
@@ -196,7 +196,7 @@ def train(train_ids=np.arange(1,14),
                                                   )
         
     train_gen = batch_iter(images=train_images,
-                           manuals=train_manuals, 
+                           groundtruths=train_groundtruths, 
                            crop_shape=crop_shape,
                            steps_per_epoch=steps_per_epoch,
                            batch_size=batch_size,
