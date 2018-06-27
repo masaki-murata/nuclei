@@ -174,6 +174,8 @@ def train(train_ids=np.arange(1,13),
           filter_list_encoding=np.array([]),
           filter_list_decoding=np.array([]),
           if_save_img=True,
+          threshold=0.5,
+          metric="accuracy",
           nb_gpus=1,
           ):
     
@@ -257,6 +259,8 @@ def train(train_ids=np.arange(1,13),
                                                                   if_save_img=if_save_img,
                                                                   nb_gpus=nb_gpus,
                                                                   batch_size=batch_size,
+                                                                  threshold=0.5,
+                                                                  metric="accuracy",
                                                                   )
             print("validation_accuracy = ", validation_accuracy)
 
@@ -539,6 +543,8 @@ def main():
           filter_list_encoding=filter_list_encoding,
           filter_list_decoding=filter_list_decoding,
           if_save_img=True,
+          threshold=0.5,
+          metric="accuracy",
           nb_gpus=1
           )   
 #    image_id=1
