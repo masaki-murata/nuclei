@@ -313,17 +313,15 @@ def whole_slide_accuracy(path_to_cnn,
                                             batch_size=batch_size,
                                             )    
         #load ground truth
-        manual = np.array( Image.open(path_to_train_manual % (image_id)) )
-        manual[manual>0]=1
-        mask = np.array( Image.open(path_to_mask % (image_id)) )
-        mask[mask>0]=1
+        groundtruth = train_main.load_grountruth(image_id)
+        groundtruth[groundtruth>0] = 1
         
         
         # しきい値処理
         prediction[prediction>=0.5]=1
         prediction[prediction<0.5]=0
         
-        accuracy[_id] = prediction[(prediction==manual) & (mask>0)].size / float( manual[mask>0].size )
+        accuracy[_id] = prediction[prediction==groundtruth].size / float( groundtruth.size )
     
     accuracy_average = accuracy.sum() / float(accuracy.size)
     
