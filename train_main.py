@@ -31,32 +31,34 @@ if os.name=='posix':
     set_session(tf.Session(config=config))
 
 
+def load_grountruth(image_id=0,
+                    path_to_train_groundtruth="../segmentation_training_set/image%02d_mask.txt", # % image_id
+                    ):
+    f = open(path_to_train_groundtruth % image_id)
+    line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+    shape = list(map(int, line.split())) # 第一行は shape
+    
+    grountruth = np.zeros(shape[0]*shape[1])
+    count = 0
+    line = f.readline()
+    while line:
+        grountruth[count] = line
+        count += 1
+        line = f.readline()
+    f.close
+    grountruth = grountruth.reshape((shape[1],shape[0]))
+#        print(grountruth[0,0], np.amax(grountruth))
+    grountruth[grountruth>0] = 255
+#        Image.fromarray(grountruth).show()
+    return grountruth
+    
 # 画像と正解ラベルを読み込む関数
 def load_image_groundtruths(image_ids=np.arange(1,15),
 #                      data_shape=(584,565),
 #                      crop_shape=(64,64),
                       ):
     path_to_train_image = "../segmentation_training_set/image%02d.png" # % image_id
-    path_to_train_mask = "../segmentation_training_set/image%02d_mask.txt" # % image_id
-
-    def load_grountruth(image_id):
-        f = open(path_to_train_mask % image_id)
-        line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
-        shape = list(map(int, line.split())) # 第一行は shape
-        
-        grountruth = np.zeros(shape[0]*shape[1])
-        count = 0
-        line = f.readline()
-        while line:
-            grountruth[count] = line
-            count += 1
-            line = f.readline()
-        f.close
-        grountruth = grountruth.reshape((shape[1],shape[0]))
-#        print(grountruth[0,0], np.amax(grountruth))
-        grountruth[grountruth>0] = 255
-#        Image.fromarray(grountruth).show()
-        return grountruth
+#    path_to_train_mask = "../segmentation_training_set/image%02d_mask.txt" # % image_id
         
     # load data
     images, groundtruths = {}, {}
@@ -246,17 +248,17 @@ def train(train_ids=np.arange(1,13),
             print(epoch)
             model_single_gpu.save(path_to_save_model % (epoch))
             model_single_gpu.save_weights(path_to_save_weights % (epoch))
-#            validation_accuracy = evaluation.whole_slide_accuracy(path_to_cnn=path_to_cnn,
-#                                                                  epoch=epoch,
-#                                                                  model=model_multi_gpu,
-#                                                                  image_ids=validation_ids,
-##                                                                  data_shape=data_shape,
-#                                                                  crop_shape=crop_shape,
-#                                                                  if_save_img=if_save_img,
-#                                                                  nb_gpus=nb_gpus,
-#                                                                  batch_size=batch_size,
-#                                                                  )
-#            print("validation_accuracy = ", validation_accuracy)
+            validation_accuracy = evaluation.whole_slide_accuracy(path_to_cnn=path_to_cnn,
+                                                                  epoch=epoch,
+                                                                  model=model_multi_gpu,
+                                                                  image_ids=validation_ids,
+#                                                                  data_shape=data_shape,
+                                                                  crop_shape=crop_shape,
+                                                                  if_save_img=if_save_img,
+                                                                  nb_gpus=nb_gpus,
+                                                                  batch_size=batch_size,
+                                                                  )
+            print("validation_accuracy = ", validation_accuracy)
 
 def dict_hyperparam():
     hp = {}

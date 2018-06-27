@@ -217,30 +217,24 @@ def whole_slide_prediction(path_to_cnn,
                            path_to_model_weights="",
                            model="",
                            image_id=38,
-                           data_shape=(584,565),
-                           crop_shape=(64,64),
+#                           data_shape=(584,565),
+                           crop_shape=(128,128),
                            nb_gpus=1,
-                           dataset="train",
+#                           dataset="train",
                            if_save_img=True,
                            if_save_npy=False,
                            batch_size=32,
                            ):
     if path_to_model_weights=="":
         path_to_model_weights = path_to_cnn+"weights_epoch=%03d.h5" % epoch
-    if dataset=="train":
-        path_to_mask = "../training/mask/%d_training_mask.gif" # % image_id
-        path_to_image = "../training/images/%d_training.tif" # % image_id
-    if dataset=="test":
-        path_to_mask = "../test/mask/%02d_test_mask.gif" # % image_id
-        path_to_image = "../test/images/%02d_test.tif" # % image_id
+    path_to_image = "../segmentation_training_set/image%02d.png" # % image_id
         
         
     if model=="":
         model = load_trained_seunet(path_to_cnn, epoch, crop_shape, nb_gpus)
     
-    image = np.array( Image.open(path_to_image % (image_id)) )
-    mask = np.array( Image.open(path_to_mask % (image_id)) )
-    mask = mask / np.amax(mask)
+    image = np.array( Image.open(path_to_image % (image_id)) )[:,:,:3]
+    data_shape = image.shape
     
     data_size = int( np.ceil(data_shape[0]/float(crop_shape[0])) * np.ceil(data_shape[1]/float(crop_shape[1])) )
     data = np.zeros( (data_size,)+crop_shape+(3,), dtype=np.uint8 )
@@ -267,7 +261,7 @@ def whole_slide_prediction(path_to_cnn,
             whole_slide_predicted[y:y+crop_shape[0], x:x+crop_shape[1]] = crop_predicted[count].reshape(crop_shape)
             count += 1
     
-    whole_slide_predicted = whole_slide_predicted*mask
+    whole_slide_predicted = whole_slide_predicted
     
     # png 形式で保存
     if if_save_img:
@@ -282,20 +276,23 @@ def whole_slide_prediction(path_to_cnn,
             
     return whole_slide_predicted
 
+    
 def whole_slide_accuracy(path_to_cnn,
                          epoch,
                          path_to_model_weights="",
                          model="",
                          image_ids=[],
-                         data_shape=(584,565),
-                         crop_shape=(64,64),
+#                         data_shape=(584,565),
+                         crop_shape=(128,128),
                          if_save_img = True,
                          nb_gpus=1,
                          batch_size=32,
+                         threshold=0.5,
+                         metric="accuracy",
                          ):
 #    path_to_model_weights = "weights_epoch=%03d.h5" % epoch
-    path_to_train_manual = "../training/1st_manual/%d_manual1.gif" # % image_id
-    path_to_mask = "../training/mask/%d_training_mask.gif" # % image_id
+#    path_to_train_manual = "../training/1st_manual/%d_manual1.gif" # % image_id
+#    path_to_mask = "../training/mask/%d_training_mask.gif" # % image_id
     
     accuracy = np.zeros(len(image_ids))
     for _id in range(len(image_ids)):
@@ -306,7 +303,7 @@ def whole_slide_accuracy(path_to_cnn,
                                             path_to_model_weights=path_to_model_weights,
                                             model=model,
                                             image_id=image_id,
-                                            data_shape=data_shape,
+#                                            data_shape=data_shape,
                                             crop_shape=crop_shape,
                                             nb_gpus=nb_gpus,
                                             if_save_img=if_save_img,
@@ -318,10 +315,13 @@ def whole_slide_accuracy(path_to_cnn,
         
         
         # しきい値処理
-        prediction[prediction>=0.5]=1
-        prediction[prediction<0.5]=0
+        prediction[prediction>=threshold]=1
+        prediction[prediction<threshold]=0
         
-        accuracy[_id] = prediction[prediction==groundtruth].size / float( groundtruth.size )
+        if metric=="accuracy":
+            accuracy[_id] = prediction[prediction==groundtruth].size / float( groundtruth.size )
+        elif metric=="dice":
+            accuracy[_id] = 2*prediction*groundtruth / float(np.sum(prediction)+np.sum(groundtruth))
     
     accuracy_average = accuracy.sum() / float(accuracy.size)
     
