@@ -76,6 +76,8 @@ def make_validation_dataset(validation_ids=np.arange(13,14),
 #                            data_shape=(584,565),
                             crop_shape=(128,128),
                             ):
+    if not os.path.exists("../IntermediateData/"):
+        os.makedirs("../IntermediateData/")
     path_to_validation_data = "../IntermediateData/validation_data_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
     path_to_validation_label = "../IntermediateData/validation_label_crop%d%d.npy" % (crop_shape[0], crop_shape[1])
     if load==True and os.path.exists(path_to_validation_data) and os.path.exists(path_to_validation_label):
@@ -91,7 +93,7 @@ def make_validation_dataset(validation_ids=np.arange(13,14),
         for count in range(val_data_size):
             image_num = np.random.choice(validation_ids)
             image, groundtruth = images[str(image_num)], groundtruths[str(image_num)]
-            print("image.shape, groundtruth.shape = ", image.shape, groundtruth.shape)
+#            print("image.shape, groundtruth.shape = ", image.shape, groundtruth.shape)
             theta = np.random.randint(360)
             (h, w) = crop_shape # w は横、h は縦
             c, s = np.abs(np.cos(np.deg2rad(theta))), np.abs(np.sin(np.deg2rad(theta)))
