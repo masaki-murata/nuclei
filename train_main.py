@@ -209,7 +209,7 @@ def train(train_ids=np.arange(1,14),
     for count in range(10):
         path_to_cnn = path_to_cnn_format % (now.month, now.day, count)
         if not os.path.exists(path_to_cnn):
-            os.mkdir(path_to_cnn)
+            os.makedirs(path_to_cnn)
             break
     path_to_code = "./train_main.py"
     path_to_code_moved = path_to_cnn + "train_main_used.py"
