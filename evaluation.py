@@ -321,7 +321,7 @@ def whole_slide_accuracy(path_to_cnn,
         if metric=="accuracy":
             accuracy[_id] = prediction[prediction==groundtruth].size / float( groundtruth.size )
         elif metric=="dice":
-            accuracy[_id] = 2*prediction*groundtruth / float(np.sum(prediction)+np.sum(groundtruth))
+            accuracy[_id] = 2*np.sum(prediction*groundtruth) / float(np.sum(prediction)+np.sum(groundtruth))
     
     accuracy_average = accuracy.sum() / float(accuracy.size)
     

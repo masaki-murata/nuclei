@@ -259,8 +259,8 @@ def train(train_ids=np.arange(1,13),
                                                                   if_save_img=if_save_img,
                                                                   nb_gpus=nb_gpus,
                                                                   batch_size=batch_size,
-                                                                  threshold=0.5,
-                                                                  metric="accuracy",
+                                                                  threshold=threshold,
+                                                                  metric=metric,
                                                                   )
             print("validation_accuracy = ", validation_accuracy)
 
@@ -544,7 +544,7 @@ def main():
           filter_list_decoding=filter_list_decoding,
           if_save_img=True,
           threshold=0.5,
-          metric="accuracy",
+          metric="dice",
           nb_gpus=1
           )   
 #    image_id=1
